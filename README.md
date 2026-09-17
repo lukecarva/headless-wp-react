@@ -167,14 +167,33 @@ Run from the repository root.
 
 Copy `packages/frontend/.env.example` to `packages/frontend/.env.local`. The localhost defaults suit local development; real deployments must set the public variables explicitly.
 
-| Variable                       | Purpose                                                   |
-| ------------------------------ | --------------------------------------------------------- |
-| `NEXT_PUBLIC_WORDPRESS_URL`    | WordPress base URL (admin links, image host allowlisting) |
-| `NEXT_PUBLIC_GRAPHQL_ENDPOINT` | WPGraphQL endpoint the frontend queries                   |
-| `REVALIDATE_SECONDS`           | ISR revalidation interval, in seconds                     |
-| `REVALIDATE_SECRET`            | Shared secret for the on demand revalidation webhook      |
+**Frontend** (`packages/frontend/.env.local`):
 
-The plugin reads one optional constant, `HWR_FRONTEND_URL` (for example in `wp-config.php` or `.wp-env.json`), used to rewrite project permalinks to the frontend and to allowlist that origin for CORS.
+| Variable                          | Purpose                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_WORDPRESS_URL`       | WordPress base URL (admin links, image host allowlisting)                             |
+| `NEXT_PUBLIC_GRAPHQL_ENDPOINT`    | WPGraphQL endpoint the frontend queries                                               |
+| `NEXT_PUBLIC_SITE_URL`            | Public URL of the frontend, for canonical, Open Graph and sitemap URLs                |
+| `REVALIDATE_SECONDS`              | ISR revalidation interval, in seconds                                                 |
+| `REVALIDATE_SECRET`               | Shared secret for the revalidation webhook (must match the plugin)                    |
+| `WP_PREVIEW_SECRET`               | Shared secret to verify preview tokens (must match the plugin); enables draft preview |
+| `WP_APP_USER` / `WP_APP_PASSWORD` | WordPress Application Password for the authenticated draft read                       |
+| `SENTRY_DSN`                      | Optional. Server-side error monitoring; inert when unset                              |
+
+**WordPress plugin constants** (in `wp-config.php` or `.wp-env.json`, all optional):
+
+| Constant                | Purpose                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `HWR_FRONTEND_URL`      | Frontend base URL; rewrites project permalinks and preview links there, and allowlists that origin for CORS |
+| `HWR_REVALIDATE_SECRET` | Shared secret sent to the revalidation webhook (must match `REVALIDATE_SECRET`)                             |
+| `HWR_PREVIEW_SECRET`    | Shared secret used to sign preview links (must match `WP_PREVIEW_SECRET`); enables the "Preview" flow       |
+
+### Testing draft preview
+
+1. On WordPress, set `HWR_FRONTEND_URL` and `HWR_PREVIEW_SECRET`, and create an Application Password (wp-admin, Users, Profile, Application Passwords).
+2. On the frontend, set `NEXT_PUBLIC_SITE_URL`, `WP_PREVIEW_SECRET` (the same value as `HWR_PREVIEW_SECRET`), `WP_APP_USER` and `WP_APP_PASSWORD`.
+3. Edit a project in wp-admin, keep it a draft, and click **Preview**.
+4. The frontend opens the draft with a "Preview mode" banner; **Exit preview** returns to published content. Draft mode sets a `Secure` cookie, so the frontend must be served over HTTPS for a browser to carry it.
 
 ## Testing
 
@@ -224,6 +243,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 - [0005 The project CPT is not rendered by WordPress](docs/decisions/0005-cpt-not-publicly-rendered.md)
 - [0006 Dedicated project capabilities](docs/decisions/0006-dedicated-project-capabilities.md)
 - [0007 Restrictive CORS](docs/decisions/0007-restrictive-cors.md)
+- [0008 Project editing surfaces (React panel default, ACF optional)](docs/decisions/0008-editing-surfaces.md)
 
 ## License
 
