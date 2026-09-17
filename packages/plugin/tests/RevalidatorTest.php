@@ -141,6 +141,38 @@ final class RevalidatorTest extends WP_UnitTestCase {
 		$this->assertSame( array( 'https://frontend.test/api/revalidate' ), $pings );
 	}
 
+	public function test_no_ping_when_saving_an_unpublished_draft(): void {
+		// A draft is not exposed to the frontend, so saving one should not bust
+		// the cache; only published content transitions trigger a ping.
+		add_filter( 'hwr_frontend_url', static fn(): string => 'https://frontend.test' );
+		add_filter( 'hwr_revalidate_secret', static fn(): string => 'shhh' );
+
+		$pinged = false;
+		add_filter(
+			'pre_http_request',
+			static function ( $pre, $args, $url ) use ( &$pinged ) {
+				if ( is_string( $url ) && false !== strpos( $url, '/api/revalidate' ) ) {
+					$pinged = true;
+				}
+				return array(
+					'response' => array( 'code' => 200 ),
+					'body'     => '',
+				);
+			},
+			10,
+			3
+		);
+
+		self::factory()->post->create(
+			array(
+				'post_type'   => ProjectPostType::POST_TYPE,
+				'post_status' => 'draft',
+			)
+		);
+
+		$this->assertFalse( $pinged );
+	}
+
 	public function test_permanently_deleting_a_project_pings_the_frontend(): void {
 		// A permanent delete bypasses wp_update_post, so the save hook does not
 		// fire; before_delete_post covers it.
