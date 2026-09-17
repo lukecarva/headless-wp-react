@@ -1,0 +1,151 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: var(--radius, 16px);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--ring, rgba(91, 83, 240, 0.35));
+}
+
+/* Featured cards get a gradient accent bar across the top. */
+.featured::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradient, linear-gradient(120deg, #5b53f0, #9333ea));
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--card-border, #e5e7eb);
+}
+
+.image {
+  object-fit: cover;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.role {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #6b7280);
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--gradient, linear-gradient(120deg, #5b53f0, #9333ea));
+  border-radius: 999px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.title a {
+  color: var(--heading, #0f172a);
+  text-decoration: none;
+}
+
+/* Stretched link: the title anchor covers the whole card, so a click anywhere
+   navigates while the title stays the only, and first, link for accessibility. */
+.title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.excerpt {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--body, #374151);
+}
+
+.excerpt :global(p) {
+  margin: 0;
+}
+
+/* Call to action pinned at the bottom of every card in the same place. It
+   fades and slides in on hover, so the affordance is consistent across cards
+   regardless of title length. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-strong, #4338ca);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover .cta,
+.card:focus-within .cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arrow {
+  transition: transform 0.2s ease;
+}
+
+.card:hover .arrow,
+.card:focus-within .arrow {
+  transform: translateX(3px);
+}
+
+/* Touch devices have no hover, so keep the affordance always visible there. */
+@media (hover: none) {
+  .cta {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .arrow {
+    transition: none;
+  }
+}

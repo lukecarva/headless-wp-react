@@ -1,0 +1,19 @@
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: auto 0 0;
+  padding-top: 1rem;
+  list-style: none;
+}
+
+.pill {
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--pill-fg, #1f2937);
+  background: var(--pill-bg, #eef2ff);
+  border: 1px solid var(--card-border, transparent);
+  border-radius: 999px;
+}
