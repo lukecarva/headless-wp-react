@@ -10,6 +10,7 @@ import type { ProjectDetail } from '@/lib/graphql/types';
 import { getProjectPreviewById, PREVIEW_ID_COOKIE } from '@/lib/preview';
 import { verifyPreviewCookie } from '@/lib/preview-token';
 import { getAllProjectSlugs, getProjectBySlug } from '@/lib/projects';
+import { httpUrl } from '@/lib/url';
 import styles from './detail.module.css';
 
 // Next requires this to be a literal; keep in sync with REVALIDATE_SECONDS.
@@ -95,6 +96,8 @@ export default async function ProjectPage({ params }: PageProps) {
     notFound();
   }
 
+  const repoUrl = httpUrl(project.repoUrl);
+
   return (
     <article>
       <Link href="/" className={styles.back}>
@@ -108,9 +111,9 @@ export default async function ProjectPage({ params }: PageProps) {
         <h1 className={styles.title}>{project.title}</h1>
         <StackList stack={project.stack} />
 
-        {project.repoUrl ? (
+        {repoUrl ? (
           <div className={styles.actions}>
-            <a className="button" href={project.repoUrl} target="_blank" rel="noreferrer noopener">
+            <a className="button" href={repoUrl} target="_blank" rel="noreferrer noopener">
               View repository ↗
             </a>
           </div>
