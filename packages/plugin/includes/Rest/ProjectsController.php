@@ -218,9 +218,10 @@ final class ProjectsController {
 					),
 				);
 			} else {
-				// A false boolean is stored as an empty string (not "0"), and the
-				// flag may be absent entirely, so "not featured" is: missing, or any
-				// value other than "1".
+				// "Not featured" is stored inconsistently across write paths (an
+				// empty string by core meta, "0" by this controller and ACF) and may
+				// be absent entirely, so treat anything that is not exactly "1" as
+				// not featured.
 				$args['meta_query'] = array(
 					'relation' => 'OR',
 					array(
