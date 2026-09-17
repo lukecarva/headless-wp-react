@@ -24,12 +24,12 @@ sequenceDiagram
 
 A single custom post type, `project`, with registered meta exposed to both REST and GraphQL:
 
-| Field    | Key            | Type    | Notes                               |
-| -------- | -------------- | ------- | ----------------------------------- |
-| Role     | `hwr_role`     | string  | e.g. "Senior Full-stack"            |
-| Stack    | `hwr_stack`    | string  | comma-separated; normalized on read |
-| Repo URL | `hwr_repo_url` | string  | validated as URL                    |
-| Featured | `hwr_featured` | boolean | drives ordering / hero placement    |
+| Field    | Key            | Type    | Notes                                                     |
+| -------- | -------------- | ------- | --------------------------------------------------------- |
+| Role     | `hwr_role`     | string  | e.g. "Senior Full-stack"                                  |
+| Stack    | `hwr_stack`    | string  | comma-separated; normalized on read                       |
+| Repo URL | `hwr_repo_url` | string  | validated as URL                                          |
+| Featured | `hwr_featured` | boolean | adds a "Featured" badge and highlight styling on the card |
 
 Meta is registered with `show_in_rest` and mirrored into WPGraphQL via `register_graphql_field`, so a single content definition serves both APIs. See [decisions/0003-register-meta-once.md](decisions/0003-register-meta-once.md).
 

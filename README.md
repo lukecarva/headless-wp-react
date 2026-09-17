@@ -105,8 +105,9 @@ headless-wp-react/
 │   │   │   ├── Editor/               # native React editing panel (enqueue)
 │   │   │   ├── Acf/                  # optional ACF field group
 │   │   │   ├── Preview.php           # signed draft-preview links
+│   │   │   ├── Frontend.php           # resolve the decoupled frontend URL (one source)
 │   │   │   ├── FrontendRedirect.php  # send the WP front-end to Next
-│   │   │   ├── Revalidator.php       # ping the frontend on save
+│   │   │   ├── Revalidator.php       # revalidate the frontend when projects change
 │   │   │   ├── Capabilities.php      # dedicated project capabilities
 │   │   │   ├── Cors.php              # restrictive CORS policy
 │   │   │   └── I18n.php              # text domain loading
@@ -179,16 +180,16 @@ Copy `packages/frontend/.env.example` to `packages/frontend/.env.local`. The loc
 
 **Frontend** (`packages/frontend/.env.local`):
 
-| Variable                          | Purpose                                                                               |
-| --------------------------------- | ------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_WORDPRESS_URL`       | WordPress base URL (admin links, image host allowlisting)                             |
-| `NEXT_PUBLIC_GRAPHQL_ENDPOINT`    | WPGraphQL endpoint the frontend queries                                               |
-| `NEXT_PUBLIC_SITE_URL`            | Public URL of the frontend, for canonical, Open Graph and sitemap URLs                |
-| `REVALIDATE_SECONDS`              | ISR revalidation interval, in seconds                                                 |
-| `REVALIDATE_SECRET`               | Shared secret for the revalidation webhook (must match the plugin)                    |
-| `WP_PREVIEW_SECRET`               | Shared secret to verify preview tokens (must match the plugin); enables draft preview |
-| `WP_APP_USER` / `WP_APP_PASSWORD` | WordPress Application Password for the authenticated draft read                       |
-| `SENTRY_DSN`                      | Optional. Server-side error monitoring; inert when unset                              |
+| Variable                          | Purpose                                                                                   |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_WORDPRESS_URL`       | WordPress base URL (admin links, image host allowlisting)                                 |
+| `NEXT_PUBLIC_GRAPHQL_ENDPOINT`    | WPGraphQL endpoint the frontend queries                                                   |
+| `NEXT_PUBLIC_SITE_URL`            | Public URL of the frontend, for canonical, Open Graph and sitemap URLs                    |
+| `REVALIDATE_SECONDS`              | ISR revalidation interval, in seconds (capped by the 60s route segment; only shortens it) |
+| `REVALIDATE_SECRET`               | Shared secret for the revalidation webhook (must match the plugin)                        |
+| `WP_PREVIEW_SECRET`               | Shared secret to verify preview tokens (must match the plugin); enables draft preview     |
+| `WP_APP_USER` / `WP_APP_PASSWORD` | WordPress Application Password for the authenticated draft read                           |
+| `SENTRY_DSN`                      | Optional. Server-side error monitoring; inert when unset                                  |
 
 **WordPress plugin constants** (in `wp-config.php` or `.wp-env.json`, all optional):
 
