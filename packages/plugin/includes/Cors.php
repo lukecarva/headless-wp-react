@@ -75,11 +75,9 @@ final class Cors {
 	 * @return string[]
 	 */
 	private function allowed_origins(): array {
-		$origins = array( home_url() );
-
-		if ( defined( 'HWR_FRONTEND_URL' ) && '' !== (string) HWR_FRONTEND_URL ) {
-			$origins[] = (string) HWR_FRONTEND_URL;
-		}
+		// The site itself and the configured frontend, resolved the same way every
+		// other feature resolves it (constant or hwr_frontend_url filter).
+		$origins = array( home_url(), Frontend::url() );
 
 		/**
 		 * Filters the CORS origin allowlist.

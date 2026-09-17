@@ -51,17 +51,15 @@ final class FrontendRedirect {
 			return;
 		}
 
-		$frontend = $this->frontend_url();
-
 		// No distinct frontend configured; do not redirect to ourselves.
-		if ( untrailingslashit( home_url() ) === $frontend ) {
+		if ( ! Frontend::is_distinct() ) {
 			return;
 		}
 
 		// The frontend renders the home page and project pages only, so every
 		// other WordPress front-end URL maps to the frontend root. 302 because the
 		// frontend URL comes from configuration and can change.
-		wp_safe_redirect( $frontend, 302 );
+		wp_safe_redirect( Frontend::url(), 302 );
 		exit;
 	}
 
@@ -72,27 +70,10 @@ final class FrontendRedirect {
 	 * @return string[]
 	 */
 	public function allow_frontend_redirect_host( array $hosts ): array {
-		$host = wp_parse_url( $this->frontend_url(), PHP_URL_HOST );
+		$host = wp_parse_url( Frontend::url(), PHP_URL_HOST );
 		if ( is_string( $host ) && '' !== $host ) {
 			$hosts[] = $host;
 		}
 		return $hosts;
-	}
-
-	/**
-	 * Returns the base URL of the frontend, mirroring ProjectPostType's resolution.
-	 *
-	 * Defaults to the WordPress home URL; override with the HWR_FRONTEND_URL
-	 * constant or the hwr_frontend_url filter.
-	 */
-	private function frontend_url(): string {
-		$default = defined( 'HWR_FRONTEND_URL' ) ? (string) HWR_FRONTEND_URL : home_url();
-
-		/**
-		 * Filters the frontend base URL used for redirects.
-		 *
-		 * @param string $url Frontend base URL, without a trailing slash.
-		 */
-		return untrailingslashit( (string) apply_filters( 'hwr_frontend_url', $default ) );
 	}
 }

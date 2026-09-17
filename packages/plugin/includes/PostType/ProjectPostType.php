@@ -9,6 +9,7 @@ declare( strict_types=1 );
 
 namespace Hwr\Portfolio\PostType;
 
+use Hwr\Portfolio\Frontend;
 use WP_Post;
 
 /**
@@ -105,10 +106,8 @@ final class ProjectPostType {
 			return;
 		}
 
-		$frontend = $this->frontend_url();
-
 		// No distinct frontend configured; do not redirect to ourselves.
-		if ( untrailingslashit( home_url() ) === $frontend ) {
+		if ( ! Frontend::is_distinct() ) {
 			return;
 		}
 
@@ -116,7 +115,7 @@ final class ProjectPostType {
 		if ( $post instanceof WP_Post && 'publish' === $post->post_status ) {
 			// 302 (temporary): the frontend URL comes from configuration and can
 			// change, so the mapping must not be cached permanently by clients.
-			wp_safe_redirect( $frontend . '/projects/' . $post->post_name, 302 );
+			wp_safe_redirect( Frontend::url() . '/projects/' . $post->post_name, 302 );
 			exit;
 		}
 	}
@@ -132,7 +131,7 @@ final class ProjectPostType {
 			return $permalink;
 		}
 
-		return $this->frontend_url() . '/projects/' . $post->post_name;
+		return Frontend::url() . '/projects/' . $post->post_name;
 	}
 
 	/**
@@ -142,27 +141,10 @@ final class ProjectPostType {
 	 * @return string[]
 	 */
 	public function allow_frontend_redirect_host( array $hosts ): array {
-		$host = wp_parse_url( $this->frontend_url(), PHP_URL_HOST );
+		$host = wp_parse_url( Frontend::url(), PHP_URL_HOST );
 		if ( is_string( $host ) && '' !== $host ) {
 			$hosts[] = $host;
 		}
 		return $hosts;
-	}
-
-	/**
-	 * Returns the base URL of the frontend that renders projects.
-	 *
-	 * Defaults to the WordPress home URL; override with the HWR_FRONTEND_URL
-	 * constant or the hwr_frontend_url filter.
-	 */
-	private function frontend_url(): string {
-		$default = defined( 'HWR_FRONTEND_URL' ) ? (string) HWR_FRONTEND_URL : home_url();
-
-		/**
-		 * Filters the frontend base URL used for project links.
-		 *
-		 * @param string $url Frontend base URL, without a trailing slash.
-		 */
-		return untrailingslashit( (string) apply_filters( 'hwr_frontend_url', $default ) );
 	}
 }

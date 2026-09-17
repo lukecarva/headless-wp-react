@@ -49,7 +49,7 @@ final class Preview {
 		}
 
 		$secret   = $this->secret();
-		$frontend = $this->frontend_url();
+		$frontend = Frontend::url();
 		if ( '' === $secret || '' === $frontend ) {
 			return $link;
 		}
@@ -86,14 +86,5 @@ final class Preview {
 		 * @param string $secret
 		 */
 		return (string) apply_filters( 'hwr_preview_secret', $default );
-	}
-
-	/**
-	 * Base URL of the frontend, mirroring the other features' resolution.
-	 */
-	private function frontend_url(): string {
-		$default = defined( 'HWR_FRONTEND_URL' ) ? (string) HWR_FRONTEND_URL : home_url();
-
-		return untrailingslashit( (string) apply_filters( 'hwr_frontend_url', $default ) );
 	}
 }
