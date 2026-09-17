@@ -246,18 +246,18 @@ final class ProjectsController {
 	}
 
 	/**
-	 * Shapes a single Project post for the API response.
+	 * Shapes a single Project post for the list and write responses.
 	 *
-	 * The full rendered content is opt-in via $with_content and omitted from
-	 * list responses, which only need the excerpt.
+	 * Full content is not included here: the list only needs the excerpt, and the
+	 * draft-preview read builds its own shape in get_preview_item().
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function prepare_item( WP_Post $post, bool $with_content = false ): array {
+	public function prepare_item( WP_Post $post ): array {
 		$meta      = $this->meta->read( $post->ID );
 		$thumbnail = get_the_post_thumbnail_url( $post, 'large' );
 
-		$data = array(
+		return array(
 			'id'            => $post->ID,
 			'slug'          => $post->post_name,
 			'title'         => get_the_title( $post ),
@@ -265,11 +265,5 @@ final class ProjectsController {
 			'featuredImage' => is_string( $thumbnail ) ? $thumbnail : null,
 			'meta'          => $meta,
 		);
-
-		if ( $with_content ) {
-			$data['content'] = apply_filters( 'the_content', $post->post_content );
-		}
-
-		return $data;
 	}
 }
