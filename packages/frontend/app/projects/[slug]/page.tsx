@@ -31,7 +31,9 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = await getProjectBySlug(slug);
+  // Draft-aware so a previewed draft gets its own title/description, not
+  // "Project not found" or a stale published title.
+  const { project } = await loadProject(slug);
   if (!project) {
     return { title: 'Project not found' };
   }
