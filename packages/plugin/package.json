@@ -9,22 +9,18 @@
     "start:editor": "wp-scripts start src/editor/index.tsx --output-path=build/editor",
     "lint": "wp-scripts lint-js src && wp-scripts lint-style \"src/**/*.scss\"",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Block unit tests run via @wordpress/scripts test-unit-js\" && wp-scripts test-unit-js --passWithNoTests",
+    "test": "wp-scripts test-unit-js",
     "composer:install": "composer install --working-dir=.",
     "php:lint": "composer run lint",
     "php:analyse": "composer run analyse",
     "php:test": "composer run test"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/react": "^19.3.0",
     "@types/wordpress__block-editor": "^15.0.6",
     "@types/wordpress__blocks": "^15.17.0",
-    "@wordpress/scripts": "^35.0.0",
-    "typescript": "^5.5.4"
-  },
-  "dependencies": {
     "@wordpress/block-editor": "^17.1.0",
-    "react": "^18.3.1",
     "@wordpress/blocks": "^16.0.0",
     "@wordpress/components": "^40.1.0",
     "@wordpress/core-data": "^7.1.0",
@@ -32,6 +28,9 @@
     "@wordpress/editor": "^14.1.0",
     "@wordpress/i18n": "^6.28.0",
     "@wordpress/plugins": "^7.1.0",
-    "@wordpress/server-side-render": "^6.31.0"
+    "@wordpress/scripts": "^35.0.0",
+    "@wordpress/server-side-render": "^6.31.0",
+    "react": "^18.3.1",
+    "typescript": "^5.5.4"
   }
 }

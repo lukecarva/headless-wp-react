@@ -15,6 +15,8 @@ import { PluginDocumentSettingPanel, store as editorStore } from '@wordpress/edi
 import { __ } from '@wordpress/i18n';
 import { registerPlugin } from '@wordpress/plugins';
 
+import { splitStack } from './stack';
+
 const POST_TYPE = 'project';
 
 type ProjectMeta = {
@@ -23,20 +25,6 @@ type ProjectMeta = {
   hwr_repo_url?: string;
   hwr_featured?: boolean;
 };
-
-/**
- * Splits the stored comma separated stack string into trimmed tokens for the
- * FormTokenField, mirroring the split the PHP layer performs.
- *
- * @param value Stored comma separated stack string.
- * @return Trimmed, non-empty stack tokens.
- */
-function splitStack( value: string ): string[] {
-  return value
-    .split( ',' )
-    .map( ( item ) => item.trim() )
-    .filter( ( item ) => item.length > 0 );
-}
 
 /**
  * Document sidebar panel with the project fields. Rendered only while editing a
