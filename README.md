@@ -246,7 +246,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 ## Deployment
 
 - **WordPress** deploys to any managed host or container. Only wp-admin and the API are public.
-- **Frontend** deploys to a static or Node host such as Vercel or Netlify. On save, the plugin's `Revalidator` calls `POST /api/revalidate` with the shared secret to revalidate on demand; set `HWR_REVALIDATE_SECRET` (WordPress) to match `REVALIDATE_SECRET` (frontend).
+- **Frontend** deploys to a static or Node host such as Vercel or Netlify. When a project is saved, trashed, restored or deleted, the plugin's `Revalidator` calls `POST /api/revalidate` with the shared secret to revalidate on demand; set `HWR_REVALIDATE_SECRET` (WordPress) to match `REVALIDATE_SECRET` (frontend).
 
 ## Architecture decisions
 

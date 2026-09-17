@@ -52,7 +52,7 @@ Reads of published projects are public by design; drafts never leak (queries fil
 
 The frontend queries WPGraphQL over **HTTP GET**. This is deliberate: Next's Data Cache only caches GET fetches, so read queries are cached, revalidated on the ISR interval (`REVALIDATE_SECONDS`), and tagged (`wpgraphql`). A POST, which is graphql-request's default, would bypass the cache entirely. The frontend is read-only, so GET is sufficient (mutations would still need POST).
 
-When a project is saved, the plugin (`Hwr\Portfolio\Revalidator`) `POST`s `/api/revalidate` with a shared secret to bust the `wpgraphql` tag, so updated content appears immediately instead of after the interval. The WordPress-side secret (`HWR_REVALIDATE_SECRET` constant or the `hwr_revalidate_secret` filter) must match the frontend's `REVALIDATE_SECRET`; when it is unset the ping is skipped. Both webhooks (`/api/revalidate` and `/api/draft`) are rate limited per client IP and answer `429` with `Retry-After`, and secrets and tokens are compared in constant time.
+When a project is saved, trashed, restored or permanently deleted, the plugin (`Hwr\Portfolio\Revalidator`) `POST`s `/api/revalidate` with a shared secret to bust the `wpgraphql` tag, so updated content and removals appear immediately instead of after the interval. The WordPress-side secret (`HWR_REVALIDATE_SECRET` constant or the `hwr_revalidate_secret` filter) must match the frontend's `REVALIDATE_SECRET`; when it is unset the ping is skipped. Both webhooks (`/api/revalidate` and `/api/draft`) are rate limited per client IP and answer `429` with `Retry-After`, and secrets and tokens are compared in constant time.
 
 ## Draft preview
 

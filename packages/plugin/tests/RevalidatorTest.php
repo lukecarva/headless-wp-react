@@ -106,16 +106,18 @@ final class RevalidatorTest extends WP_UnitTestCase {
 		$this->assertFalse( $pinged );
 	}
 
-	public function test_trashing_a_project_pings_the_frontend(): void {
+	public function test_trashing_a_project_pings_the_frontend_once(): void {
+		// Trashing routes through wp_update_post, so the save hook covers it; the
+		// count guards against a redundant status hook pinging a second time.
 		add_filter( 'hwr_frontend_url', static fn(): string => 'https://frontend.test' );
 		add_filter( 'hwr_revalidate_secret', static fn(): string => 'shhh' );
 
-		$captured = array();
+		$pings = array();
 		add_filter(
 			'pre_http_request',
-			static function ( $pre, $args, $url ) use ( &$captured ) {
+			static function ( $pre, $args, $url ) use ( &$pings ) {
 				if ( is_string( $url ) && false !== strpos( $url, '/api/revalidate' ) ) {
-					$captured['url'] = $url;
+					$pings[] = $url;
 				}
 				return array(
 					'response' => array( 'code' => 200 ),
@@ -133,9 +135,44 @@ final class RevalidatorTest extends WP_UnitTestCase {
 			)
 		);
 
-		$captured = array();
+		$pings = array();
 		wp_trash_post( $project );
 
-		$this->assertSame( 'https://frontend.test/api/revalidate', $captured['url'] ?? null );
+		$this->assertSame( array( 'https://frontend.test/api/revalidate' ), $pings );
+	}
+
+	public function test_permanently_deleting_a_project_pings_the_frontend(): void {
+		// A permanent delete bypasses wp_update_post, so the save hook does not
+		// fire; before_delete_post covers it.
+		add_filter( 'hwr_frontend_url', static fn(): string => 'https://frontend.test' );
+		add_filter( 'hwr_revalidate_secret', static fn(): string => 'shhh' );
+
+		$pings = array();
+		add_filter(
+			'pre_http_request',
+			static function ( $pre, $args, $url ) use ( &$pings ) {
+				if ( is_string( $url ) && false !== strpos( $url, '/api/revalidate' ) ) {
+					$pings[] = $url;
+				}
+				return array(
+					'response' => array( 'code' => 200 ),
+					'body'     => '',
+				);
+			},
+			10,
+			3
+		);
+
+		$project = self::factory()->post->create(
+			array(
+				'post_type'   => ProjectPostType::POST_TYPE,
+				'post_status' => 'publish',
+			)
+		);
+
+		$pings = array();
+		wp_delete_post( $project, true );
+
+		$this->assertSame( array( 'https://frontend.test/api/revalidate' ), $pings );
 	}
 }

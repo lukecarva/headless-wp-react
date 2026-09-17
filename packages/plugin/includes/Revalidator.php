@@ -14,26 +14,29 @@ use Hwr\Portfolio\PostType\ProjectPostType;
 /**
  * Tells the frontend to revalidate cached project data when a project changes.
  *
- * Closes the on-demand loop with the Next webhook: on a project save, trash or
- * restore it POSTs to {frontend}/api/revalidate with the shared secret, so
- * published changes and removals appear immediately instead of waiting out the
- * ISR interval. It is inert when the secret is not configured
+ * Closes the on-demand loop with the Next webhook: on a project save or a
+ * permanent deletion it POSTs to {frontend}/api/revalidate with the shared
+ * secret, so published changes and removals appear immediately instead of
+ * waiting out the ISR interval. It is inert when the secret is not configured
  * (HWR_REVALIDATE_SECRET / the hwr_revalidate_secret filter) or when no distinct
  * frontend URL is set, so it never pings this WordPress site.
  */
 final class Revalidator {
 
 	/**
-	 * Registers the save and trash hooks.
+	 * Registers the save and delete hooks.
 	 */
 	public function register_hooks(): void {
 		add_action( 'save_post_' . ProjectPostType::POST_TYPE, array( $this, 'on_change' ) );
-		add_action( 'trashed_post', array( $this, 'on_status_change' ) );
-		add_action( 'untrashed_post', array( $this, 'on_status_change' ) );
+		add_action( 'before_delete_post', array( $this, 'on_delete' ) );
 	}
 
 	/**
-	 * Pings the frontend after a project is created or updated.
+	 * Pings the frontend after a project is created, updated, trashed or restored.
+	 *
+	 * WordPress routes trashing and restoring through wp_update_post, so this one
+	 * save hook already covers those transitions; only a permanent deletion needs
+	 * a hook of its own.
 	 *
 	 * @param int $post_id Saved post ID.
 	 */
@@ -46,15 +49,16 @@ final class Revalidator {
 	}
 
 	/**
-	 * Pings the frontend when a project is trashed or restored.
+	 * Pings the frontend when a project is permanently deleted.
 	 *
-	 * `trashed_post` and `untrashed_post` fire for every post type, so this checks
-	 * the type; without it a removed project would linger on the frontend until
-	 * the ISR interval elapsed.
+	 * A permanent deletion does not fire save_post, so it is handled here.
+	 * `before_delete_post` fires for every post type and before the row is gone,
+	 * so this checks the type while get_post_type() still resolves; without it a
+	 * deleted project would linger on the frontend until the ISR interval elapsed.
 	 *
-	 * @param int $post_id Affected post ID.
+	 * @param int $post_id Post being deleted.
 	 */
-	public function on_status_change( int $post_id ): void {
+	public function on_delete( int $post_id ): void {
 		if ( ProjectPostType::POST_TYPE === get_post_type( $post_id ) ) {
 			$this->ping();
 		}
