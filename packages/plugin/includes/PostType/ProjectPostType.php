@@ -32,6 +32,7 @@ final class ProjectPostType {
 	 */
 	public function register_hooks(): void {
 		add_action( 'init', array( $this, 'register' ) );
+		add_action( 'add_meta_boxes', array( $this, 'remove_custom_fields_metabox' ) );
 		add_action( 'template_redirect', array( $this, 'redirect_to_frontend' ) );
 		add_filter( 'post_type_link', array( $this, 'filter_permalink' ), 10, 2 );
 		add_filter( 'allowed_redirect_hosts', array( $this, 'allow_frontend_redirect_host' ) );
@@ -79,6 +80,19 @@ final class ProjectPostType {
 				'graphql_plural_name' => self::GRAPHQL_PLURAL,
 			)
 		);
+	}
+
+	/**
+	 * Removes the classic Custom Fields metabox for projects.
+	 *
+	 * The `custom-fields` support flag is kept because the React editing panel
+	 * reads and writes meta through the block editor's entity, which requires it.
+	 * The raw metabox duplicates that panel (and ACF), so it is removed here; the
+	 * Gutenberg Custom Fields panel is a per-user preference, off by default. See
+	 * docs/decisions/0008-editing-surfaces.md.
+	 */
+	public function remove_custom_fields_metabox(): void {
+		remove_meta_box( 'postcustom', self::POST_TYPE, 'normal' );
 	}
 
 	/**
