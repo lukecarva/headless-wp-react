@@ -60,4 +60,15 @@ final class PreviewTest extends WP_UnitTestCase {
 
 		$this->assertSame( $original, ( new Preview() )->filter_preview_link( $original, $post ) );
 	}
+
+	public function test_is_inert_without_a_distinct_frontend(): void {
+		// Secret set but the frontend resolves to this site: fall back to
+		// WordPress's own preview instead of a link that targets this WordPress.
+		add_filter( 'hwr_frontend_url', static fn(): string => home_url(), 20 );
+
+		$post     = self::factory()->post->create_and_get( array( 'post_type' => ProjectPostType::POST_TYPE ) );
+		$original = 'http://wp.test/?p=1&preview=true';
+
+		$this->assertSame( $original, ( new Preview() )->filter_preview_link( $original, $post ) );
+	}
 }

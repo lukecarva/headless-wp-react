@@ -48,11 +48,15 @@ final class Preview {
 			return $link;
 		}
 
-		$secret   = $this->secret();
-		$frontend = Frontend::url();
-		if ( '' === $secret || '' === $frontend ) {
+		$secret = $this->secret();
+
+		// Inert without a secret or a distinct frontend: without either, fall back
+		// to WordPress's own preview rather than a link that targets this site.
+		if ( '' === $secret || ! Frontend::is_distinct() ) {
 			return $link;
 		}
+
+		$frontend = Frontend::url();
 
 		$id   = (int) $post->ID;
 		$slug = '' !== $post->post_name ? $post->post_name : sanitize_title( $post->post_title );
