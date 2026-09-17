@@ -46,11 +46,13 @@ export async function GET(request: Request): Promise<Response> {
   (await draftMode()).enable();
   // Store the id and slug signed with the preview secret, so a draft session can
   // only read the project the token authorized, and only on that project's URL (a
-  // swapped id or slug fails verification on the page). Secure in production.
+  // swapped id or slug fails verification on the page). Secure in production, and
+  // bounded to an hour so a preview session does not last the whole browser.
   (await cookies()).set(PREVIEW_ID_COOKIE, signPreviewCookie(id, slug, secret), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60,
     path: '/',
   });
 
