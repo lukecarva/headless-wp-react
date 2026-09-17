@@ -19,9 +19,6 @@ describe( 'splitStack', () => {
   } );
 
   it( 'de-duplicates repeated tokens, mirroring the PHP split', () => {
-    expect( splitStack( 'React, WordPress, React' ) ).toEqual( [
-      'React',
-      'WordPress',
-    ] );
+    expect( splitStack( 'React, WordPress, React' ) ).toEqual( [ 'React', 'WordPress' ] );
   } );
 } );
