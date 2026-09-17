@@ -24,4 +24,4 @@ Editors need to preview an unpublished project on the real React frontend before
 **Trade-offs**
 
 - WPGraphQL was not used for the authenticated read. It resets the current user during HTTP request processing, so Basic-auth Application Passwords do not authenticate GraphQL requests reliably; REST authenticates them natively, so the preview read uses the existing `hwr/v1` namespace while the public reads stay on GraphQL.
-- Next.js draft mode sets a `Secure` cookie, so the frontend must be served over HTTPS for a browser to carry it.
+- In production, Next.js draft mode uses `Secure` cookies, so a production frontend must be served over HTTPS for a browser to carry them; local development over HTTP works.

@@ -203,7 +203,7 @@ Copy `packages/frontend/.env.example` to `packages/frontend/.env.local`. The loc
 1. On WordPress, set `HWR_FRONTEND_URL` and `HWR_PREVIEW_SECRET`, and create an Application Password (wp-admin, Users, Profile, Application Passwords).
 2. On the frontend, set `NEXT_PUBLIC_SITE_URL`, `WP_PREVIEW_SECRET` (the same value as `HWR_PREVIEW_SECRET`), `WP_APP_USER` and `WP_APP_PASSWORD`.
 3. Edit a project in wp-admin, keep it a draft, and click **Preview**.
-4. The frontend opens the draft with a "Preview mode" banner; **Exit preview** returns to published content. Draft mode sets a `Secure` cookie, so the frontend must be served over HTTPS for a browser to carry it.
+4. The frontend opens the draft with a "Preview mode" banner; **Exit preview** returns to published content. In production, draft mode uses `Secure` cookies, so a production frontend must be served over HTTPS; local development over HTTP works.
 
 ## Testing
 
