@@ -150,4 +150,72 @@ final class ProjectsControllerTest extends WP_UnitTestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( '1', get_post_meta( $project, ProjectMeta::FEATURED, true ) );
 	}
+
+	public function test_preview_route_is_registered(): void {
+		$routes = rest_get_server()->get_routes();
+		$this->assertArrayHasKey( '/hwr/v1/projects/(?P<id>\d+)/preview', $routes );
+	}
+
+	public function test_preview_denies_users_without_capability(): void {
+		$subscriber = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		$project    = self::factory()->post->create(
+			array(
+				'post_type'   => ProjectPostType::POST_TYPE,
+				'post_status' => 'draft',
+			)
+		);
+
+		wp_set_current_user( $subscriber );
+
+		$request  = new WP_REST_Request( 'GET', '/hwr/v1/projects/' . $project . '/preview' );
+		$response = rest_get_server()->dispatch( $request );
+
+		$this->assertSame( 403, $response->get_status() );
+	}
+
+	public function test_preview_returns_a_draft_for_an_authorized_editor(): void {
+		Capabilities::add();
+		$editor  = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$project = self::factory()->post->create(
+			array(
+				'post_type'    => ProjectPostType::POST_TYPE,
+				'post_status'  => 'draft',
+				'post_title'   => 'Draft Project',
+				'post_content' => '<p>Unpublished body.</p>',
+			)
+		);
+		update_post_meta( $project, ProjectMeta::ROLE, 'Backend' );
+		update_post_meta( $project, ProjectMeta::STACK, 'PHP, WPGraphQL' );
+
+		wp_set_current_user( $editor );
+
+		$request  = new WP_REST_Request( 'GET', '/hwr/v1/projects/' . $project . '/preview' );
+		$response = rest_get_server()->dispatch( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+
+		$data = $response->get_data();
+		$this->assertSame( 'Draft Project', $data['title'] );
+		$this->assertSame( 'Backend', $data['role'] );
+		$this->assertSame( array( 'PHP', 'WPGraphQL' ), $data['stack'] );
+		$this->assertStringContainsString( 'Unpublished body.', (string) $data['content'] );
+	}
+
+	public function test_preview_returns_404_for_non_project_posts(): void {
+		Capabilities::add();
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$post   = self::factory()->post->create(
+			array(
+				'post_type'   => 'post',
+				'post_status' => 'draft',
+			)
+		);
+
+		wp_set_current_user( $editor );
+
+		$request  = new WP_REST_Request( 'GET', '/hwr/v1/projects/' . $post . '/preview' );
+		$response = rest_get_server()->dispatch( $request );
+
+		$this->assertSame( 404, $response->get_status() );
+	}
 }

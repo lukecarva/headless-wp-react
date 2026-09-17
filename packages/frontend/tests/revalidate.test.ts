@@ -60,4 +60,21 @@ describe('POST /api/revalidate', () => {
     expect(response.status).toBe(401);
     expect(revalidateTag).not.toHaveBeenCalled();
   });
+
+  it('rate limits repeated requests and sends Retry-After', async () => {
+    const ip = '198.51.100.7';
+    const make = (): Request =>
+      new Request('http://localhost/api/revalidate', {
+        method: 'POST',
+        headers: { 'x-forwarded-for': ip, 'x-revalidate-secret': 'top-secret' },
+      });
+
+    for (let i = 0; i < 10; i += 1) {
+      expect((await POST(make())).status).toBe(200);
+    }
+
+    const limited = await POST(make());
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get('Retry-After')).toBeTruthy();
+  });
 });
