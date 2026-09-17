@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bmewburn.vscode-intelephense-client",
+    "wordpresstoolbox.wordpress-toolbox",
+    "GraphQL.vscode-graphql"
+  ]
+}
