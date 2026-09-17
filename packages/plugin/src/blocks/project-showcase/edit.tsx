@@ -18,7 +18,7 @@ export type ProjectShowcaseAttributes = {
 export default function Edit( {
   attributes,
   setAttributes,
-}: BlockEditProps< ProjectShowcaseAttributes > ): JSX.Element {
+}: BlockEditProps< ProjectShowcaseAttributes > ) {
   const { featuredOnly, count, heading } = attributes;
   const blockProps = useBlockProps();
 
