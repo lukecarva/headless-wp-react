@@ -1,0 +1,4 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "ignorePatterns": ["lib/graphql/generated.ts", ".next", "node_modules"]
+}

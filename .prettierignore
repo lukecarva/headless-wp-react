@@ -1,0 +1,14 @@
+node_modules
+vendor
+build
+dist
+.next
+out
+coverage
+pnpm-lock.yaml
+packages/frontend/lib/graphql/generated.ts
+
+# Gutenberg block source follows WordPress JS conventions and is
+# formatted/linted by @wordpress/scripts, not the repo-wide Prettier config.
+packages/plugin/src/**/*.ts
+packages/plugin/src/**/*.tsx

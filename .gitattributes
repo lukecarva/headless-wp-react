@@ -1,0 +1,10 @@
+# Normalize line endings to LF on checkin.
+* text=auto eol=lf
+
+# Binary files.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "hwr/project-showcase",
+  "version": "1.0.0",
+  "title": "Project Showcase",
+  "category": "widgets",
+  "icon": "portfolio",
+  "description": "Displays a grid of portfolio projects, optionally limited to featured ones. Rendered dynamically from the project post type.",
+  "keywords": ["project", "portfolio", "showcase"],
+  "textdomain": "headless-portfolio",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"],
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "attributes": {
+    "featuredOnly": {
+      "type": "boolean",
+      "default": false
+    },
+    "count": {
+      "type": "number",
+      "default": 3
+    },
+    "heading": {
+      "type": "string",
+      "default": "Selected work"
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

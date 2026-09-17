@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: Plugin (PHP)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/plugin
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v6
+        with:
+          path: packages/plugin/vendor
+          key: composer-${{ hashFiles('packages/plugin/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Coding standards (PHPCS)
+        run: composer run lint
+
+      - name: Static analysis (PHPStan)
+        run: composer run analyse
+
+  js:
+    name: Frontend & Blocks (JS/TS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  graphql-contract:
+    name: GraphQL contract (codegen vs live schema)
+    runs-on: ubuntu-latest
+    needs: [js]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start WordPress (wp-env)
+        run: pnpm env:start
+
+      - name: Generate types from the live schema
+        # codegen validates every query/fragment against the real WPGraphQL
+        # schema; a field the schema no longer exposes fails this step.
+        run: pnpm codegen
+
+      - name: Type-check generated operations
+        run: pnpm --filter @hwr/frontend exec tsc --noEmit
+
+      - name: Upload schema snapshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: graphql-schema
+          path: packages/frontend/schema.graphql
+          retention-days: 7
+
+  e2e:
+    name: End-to-end (Playwright + wp-env)
+    runs-on: ubuntu-latest
+    needs: [php, js]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @hwr/frontend exec playwright install --with-deps chromium
+
+      - name: Start WordPress (wp-env)
+        run: pnpm env:start
+
+      - name: Seed test data
+        run: |
+          pnpm exec wp-env run cli wp post create --post_type=project --post_status=publish --post_title="CI Project One" --porcelain
+          pnpm exec wp-env run cli wp post create --post_type=project --post_status=publish --post_title="CI Project Two" --porcelain
+
+      - name: Run e2e
+        run: pnpm test:e2e
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: packages/frontend/playwright-report/
+          retention-days: 7

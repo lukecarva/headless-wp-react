@@ -1,0 +1,15 @@
+includes:
+  - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+  level: 6
+  paths:
+    - headless-portfolio.php
+    - uninstall.php
+    - includes
+  bootstrapFiles:
+    - tests/phpstan-bootstrap.php
+  # WPGraphQL is provided at runtime and guarded with function_exists(); its
+  # symbols are not present at analysis time, so ignore the related noise.
+  ignoreErrors:
+    - '#WPGraphQL\\Model\\Post#'
