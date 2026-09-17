@@ -1,0 +1,32 @@
+{
+  "name": "@hwr/plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless Portfolio WordPress plugin. PHP backend and TypeScript Gutenberg blocks.",
+  "scripts": {
+    "build": "wp-scripts build --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "lint": "wp-scripts lint-js src && wp-scripts lint-style \"src/**/*.scss\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Block unit tests run via @wordpress/scripts test-unit-js\" && wp-scripts test-unit-js --passWithNoTests",
+    "composer:install": "composer install --working-dir=.",
+    "php:lint": "composer run lint",
+    "php:analyse": "composer run analyse",
+    "php:test": "composer run test"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/wordpress__block-editor": "^15.0.6",
+    "@types/wordpress__blocks": "^15.17.0",
+    "@wordpress/scripts": "^35.0.0",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@wordpress/block-editor": "^17.1.0",
+    "react": "^18.3.1",
+    "@wordpress/blocks": "^16.0.0",
+    "@wordpress/components": "^40.1.0",
+    "@wordpress/i18n": "^6.28.0",
+    "@wordpress/server-side-render": "^6.31.0"
+  }
+}

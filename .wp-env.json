@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+  "core": "WordPress/WordPress#6.8",
+  "phpVersion": "8.2",
+  "plugins": ["./packages/plugin", "https://downloads.wordpress.org/plugin/wp-graphql.2.23.0.zip"],
+  "config": {
+    "WP_DEBUG": true,
+    "WP_DEBUG_LOG": true,
+    "WP_DEBUG_DISPLAY": false,
+    "SCRIPT_DEBUG": true,
+    "GRAPHQL_DEBUG": true,
+    "WP_ENVIRONMENT_TYPE": "local",
+    "HWR_FRONTEND_URL": "http://localhost:3000",
+    "HWR_REVALIDATE_SECRET": "change-me"
+  },
+  "mappings": {
+    "wp-content/mu-plugins": "./packages/plugin/tools/dev-mu-plugins"
+  },
+  "env": {
+    "tests": {
+      "config": {
+        "WP_DEBUG": true,
+        "HWR_REVALIDATE_SECRET": ""
+      }
+    }
+  }
+}

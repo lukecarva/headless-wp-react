@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<ruleset name="Headless Portfolio">
+	<description>WordPress coding standards for the Headless Portfolio plugin.</description>
+
+	<file>headless-portfolio.php</file>
+	<file>uninstall.php</file>
+	<file>includes</file>
+	<file>src</file>
+	<file>tools</file>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress-Extra">
+		<!-- PSR-4 file naming is enforced by Composer autoload, not WP file rules. -->
+		<exclude name="WordPress.Files.FileName"/>
+		<!-- Meta-based filtering is intentional for the small projects dataset. -->
+		<exclude name="WordPress.DB.SlowDBQuery"/>
+	</rule>
+
+	<!--
+		Database access safety. The plugin issues no raw SQL. All reads and writes
+		go through WP_Query, get_post_meta, update_post_meta and WPGraphQL, which
+		parameterize internally. These sniffs are part of the WordPress standard
+		above; they are pinned explicitly so the no direct query and no unprepared
+		query guarantee is visible and any future raw query fails CI.
+	-->
+	<rule ref="WordPress.DB.PreparedSQL"/>
+	<rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+	<rule ref="WordPress.DB.DirectDatabaseQuery"/>
+
+	<!-- get_block_wrapper_attributes() returns markup WordPress already escapes. -->
+	<rule ref="WordPress.Security.EscapeOutput">
+		<properties>
+			<property name="customAutoEscapedFunctions" type="array">
+				<element value="get_block_wrapper_attributes"/>
+			</property>
+		</properties>
+	</rule>
+
+	<config name="minimum_supported_wp_version" value="6.5"/>
+	<config name="testVersion" value="8.2-"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="headless-portfolio"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

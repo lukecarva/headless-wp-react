@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Build output
+build/
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Generated
+packages/frontend/lib/graphql/generated.ts
+schema.graphql
+
+# WordPress env
+.wp-env.override.json
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+.phpunit.result.cache
+
+# Env files
+.env
+.env.local
+.env*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

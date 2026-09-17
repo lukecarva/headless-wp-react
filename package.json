@@ -1,0 +1,37 @@
+{
+  "name": "headless-wp-react",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless WordPress + React monorepo. Custom plugin (CPT, REST, WPGraphQL), Gutenberg blocks in TypeScript, and a Next.js frontend with typed GraphQL.",
+  "author": "Math Rosa",
+  "license": "MIT",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "env:start": "wp-env start",
+    "env:stop": "wp-env stop",
+    "env:destroy": "wp-env destroy",
+    "env:clean": "wp-env clean all",
+    "dev": "pnpm --filter @hwr/frontend dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @hwr/frontend test:e2e",
+    "codegen": "pnpm --filter @hwr/frontend codegen",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "@wordpress/env": "^11.15.0",
+    "prettier": "^3.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.5.18": "^8.5.28"
+    }
+  }
+}
