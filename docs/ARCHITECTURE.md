@@ -36,7 +36,11 @@ Meta is registered with `show_in_rest` and mirrored into WPGraphQL via `register
 ## API surfaces
 
 - **WPGraphQL** is the primary read surface for the frontend. It gives the frontend exactly the fields it needs in one round trip and, combined with `graphql-codegen`, end-to-end type safety.
-- **REST** (`/wp-json/hwr/v1/projects`) exists for third parties / webhooks / no-GraphQL consumers and to demonstrate the classic WP REST path. It shares the same read model as GraphQL, and adds a capability-guarded write route (`POST /hwr/v1/projects/{id}/featured`).
+- **REST** (`/wp-json/hwr/v1/projects`) exists for third parties / webhooks / no-GraphQL consumers and to demonstrate the classic WP REST path. It shares the same read model as GraphQL, and adds a capability-guarded write route (`POST /hwr/v1/projects/{id}/featured`) and a capability-guarded draft read (`GET /hwr/v1/projects/{id}/preview`, used by draft preview).
+
+## Front-end redirect
+
+WordPress never renders the public site. `Hwr\Portfolio\FrontendRedirect` hooks `template_redirect` and 302-redirects every WordPress front-end request to the Next.js app, except single `project` views (which map to `/projects/{slug}`), editor previews, feeds and `robots.txt`. Admin, REST and GraphQL requests never reach `template_redirect`, so they are unaffected, and it is inert until a distinct `HWR_FRONTEND_URL` is set. See [decisions/0010-headless-frontend-redirect.md](decisions/0010-headless-frontend-redirect.md).
 
 ## Authorization
 
@@ -48,7 +52,15 @@ Reads of published projects are public by design; drafts never leak (queries fil
 
 The frontend queries WPGraphQL over **HTTP GET**. This is deliberate: Next's Data Cache only caches GET fetches, so read queries are cached, revalidated on the ISR interval (`REVALIDATE_SECONDS`), and tagged (`wpgraphql`). A POST, which is graphql-request's default, would bypass the cache entirely. The frontend is read-only, so GET is sufficient (mutations would still need POST).
 
-When a project is saved, the plugin (`Hwr\Portfolio\Revalidator`) `POST`s `/api/revalidate` with a shared secret to bust the `wpgraphql` tag, so updated content appears immediately instead of after the interval. The WordPress-side secret (`HWR_REVALIDATE_SECRET` constant or the `hwr_revalidate_secret` filter) must match the frontend's `REVALIDATE_SECRET`; when it is unset the ping is skipped.
+When a project is saved, the plugin (`Hwr\Portfolio\Revalidator`) `POST`s `/api/revalidate` with a shared secret to bust the `wpgraphql` tag, so updated content appears immediately instead of after the interval. The WordPress-side secret (`HWR_REVALIDATE_SECRET` constant or the `hwr_revalidate_secret` filter) must match the frontend's `REVALIDATE_SECRET`; when it is unset the ping is skipped. Both webhooks (`/api/revalidate` and `/api/draft`) are rate limited per client IP and answer `429` with `Retry-After`, and secrets and tokens are compared in constant time.
+
+## Draft preview
+
+Editors preview unpublished projects on the React frontend. WordPress rewrites a project's "Preview" link to `{frontend}/api/draft` with an HMAC-signed token (id, slug, expiry). The frontend verifies it, enables Next.js draft mode, and stores the id and slug in a signed httpOnly cookie; the project page then reads the draft by id from the capability-guarded `GET /hwr/v1/projects/{id}/preview` route, authenticated with a WordPress Application Password held server-side. Published pages stay static; only a draft session renders dynamically. The read uses REST rather than GraphQL because WPGraphQL does not reliably authenticate Basic-auth Application Passwords. See [decisions/0009-draft-preview.md](decisions/0009-draft-preview.md).
+
+## Observability
+
+Server-side errors (route handlers, Server Components, data fetching) are captured by Sentry through `instrumentation.ts`, gated on `SENTRY_DSN`. It is inert without a DSN and adds no client bundle, so the app runs unchanged when observability is not configured.
 
 ## Boundaries
 

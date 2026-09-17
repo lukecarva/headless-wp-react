@@ -5,8 +5,11 @@ The presentation half of the monorepo. A Next.js (App Router) app that reads pro
 ## Highlights
 
 - **App Router**, React Server Components, static generation with incremental revalidation.
-- **Typed GraphQL**: queries in `lib/graphql`, a thin typed client, and `graphql-codegen` wired for schema derived types.
+- **Typed GraphQL**: queries in `lib/graphql`, a thin typed client, and `graphql-codegen` wired for schema-derived types.
 - **Data-access layer** (`lib/projects.ts`) keeps routes free of query wiring and easy to test.
+- **Draft preview**: `app/api/draft` verifies a signed token, enables Next.js draft mode, and renders the draft from an authenticated read.
+- **SEO**: `sitemap.ts`, `robots.ts`, Open Graph, and `metadataBase` for absolute canonical URLs.
+- **On-demand revalidation** webhook (`app/api/revalidate`), rate limited per IP; optional Sentry error monitoring.
 - **Tests**: Vitest and Testing Library for components, Playwright for end to end.
 
 ## Layout
@@ -14,14 +17,21 @@ The presentation half of the monorepo. A Next.js (App Router) app that reads pro
 ```
 frontend/
 ├── app/
-│   ├── layout.tsx                 # shell, metadata
+│   ├── layout.tsx                 # shell, metadata, Open Graph
 │   ├── page.tsx                   # project grid (ISR)
-│   └── projects/[slug]/page.tsx   # detail page (SSG + generateStaticParams)
-├── components/                    # ProjectCard, StackList (+ CSS modules)
+│   ├── projects/[slug]/page.tsx   # detail page (SSG), draft-aware
+│   ├── api/revalidate/route.ts    # on-demand revalidation webhook
+│   ├── api/draft/                 # draft-mode entry and exit
+│   ├── sitemap.ts, robots.ts      # SEO
+│   └── error.tsx, loading.tsx     # error and loading states
+├── components/                    # ProjectCard, StackList, PreviewBanner (+ CSS modules)
 ├── lib/
 │   ├── env.ts                     # validated env access
 │   ├── projects.ts                # data-access layer
+│   ├── preview.ts, preview-token.ts   # authenticated draft read + token
+│   ├── rate-limit.ts              # per-IP webhook rate limiter
 │   └── graphql/                   # client, queries, types (+ generated)
+├── instrumentation.ts             # Sentry (opt-in)
 └── tests/                         # Vitest units + Playwright e2e
 ```
 

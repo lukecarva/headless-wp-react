@@ -40,8 +40,10 @@ The frontend adapts to the reader's system theme (dark mode shown):
 - **One content model, two APIs.** Project fields are defined once and exposed through both WPGraphQL and a custom REST namespace, so the surfaces cannot drift.
 - **Contract-checked GraphQL.** The frontend's WPGraphQL queries are validated against the live schema in CI via `graphql-codegen`; the app uses hand-authored types kept in sync with that schema.
 - **Blocks in TypeScript.** The `project-showcase` Gutenberg block uses `block.json` (API v3) and renders dynamically in PHP.
+- **Editing in React.** A native Gutenberg document-sidebar panel (with optional ACF) edits the project fields; the choice is recorded in ADR 0008.
+- **Draft preview, end to end.** A signed "Preview" link opens an unpublished draft on the React frontend through Next.js draft mode and an authenticated read.
 - **Tested on both sides.** PHPUnit for the plugin, Vitest for units, Playwright for end to end.
-- **Secure by default.** Per post capability checks, dedicated capabilities, a restrictive CORS policy, no raw SQL, and debug output disabled outside development.
+- **Secure by default.** Per-post capability checks, dedicated capabilities, a restrictive CORS policy, HMAC-signed preview tokens, per-IP rate-limited webhooks, baseline security headers, no raw SQL, and debug output off outside development.
 
 ## Architecture
 
@@ -73,17 +75,18 @@ Content is authored in WordPress and never rendered by its theme. The Next.js ap
 
 ## Tech stack
 
-| Layer          | Choice                                                          |
-| -------------- | --------------------------------------------------------------- |
-| CMS / API      | WordPress 6.8, PHP 8.2, custom plugin (namespaced, PSR-4)       |
-| Data access    | WPGraphQL (primary) and a custom REST namespace (`hwr/v1`)      |
-| Editing        | Gutenberg block (`@wordpress/scripts`, `block.json` API v3, TS) |
-| Frontend       | Next.js (App Router), React, TypeScript                         |
-| GraphQL typing | `graphql-codegen`, validated against the live schema in CI      |
-| Local env      | `@wordpress/env` (Docker), one command to boot WP and plugins   |
-| Tests          | PHPUnit (plugin), Vitest (units), Playwright (e2e)              |
-| Quality        | PHPCS (WordPress Coding Standards), PHPStan, ESLint, Prettier   |
-| CI             | GitHub Actions, PHP and JS jobs plus a GraphQL contract job     |
+| Layer          | Choice                                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| CMS / API      | WordPress 6.8, PHP 8.2, custom plugin (namespaced, PSR-4)                                                         |
+| Data access    | WPGraphQL (primary) and a custom REST namespace (`hwr/v1`)                                                        |
+| Editing        | Gutenberg block plus a React document-sidebar panel (`@wordpress/scripts`, `block.json` API v3, TS); optional ACF |
+| Frontend       | Next.js (App Router), React, TypeScript                                                                           |
+| GraphQL typing | `graphql-codegen`, validated against the live schema in CI                                                        |
+| Observability  | Sentry (opt-in) for server-side error monitoring                                                                  |
+| Local env      | `@wordpress/env` (Docker), one command to boot WP and plugins                                                     |
+| Tests          | PHPUnit (plugin), Vitest (units), Playwright (e2e)                                                                |
+| Quality        | PHPCS (WordPress Coding Standards), PHPStan, ESLint, Prettier                                                     |
+| CI             | GitHub Actions: PHP, JS, GraphQL contract, and integration jobs                                                   |
 
 ## Repository layout
 
@@ -96,21 +99,28 @@ headless-wp-react/
 │   │   │   ├── Plugin.php            # wires features to hooks
 │   │   │   ├── PostType/             # the project CPT and permalinks
 │   │   │   ├── Meta/                 # single source of truth for fields
-│   │   │   ├── Rest/                 # hwr/v1 controller (read + guarded write)
+│   │   │   ├── Rest/                 # hwr/v1 controller (read, guarded write, preview)
 │   │   │   ├── GraphQL/              # WPGraphQL field registration
 │   │   │   ├── Blocks/               # block registrar
+│   │   │   ├── Editor/               # native React editing panel (enqueue)
+│   │   │   ├── Acf/                  # optional ACF field group
+│   │   │   ├── Preview.php           # signed draft-preview links
+│   │   │   ├── FrontendRedirect.php  # send the WP front-end to Next
+│   │   │   ├── Revalidator.php       # ping the frontend on save
 │   │   │   ├── Capabilities.php      # dedicated project capabilities
 │   │   │   ├── Cors.php              # restrictive CORS policy
 │   │   │   └── I18n.php              # text domain loading
 │   │   ├── src/blocks/               # Gutenberg block source (TypeScript)
-│   │   ├── build/                    # compiled blocks (generated)
+│   │   ├── src/editor/               # React editing-panel source (TypeScript)
+│   │   ├── build/                    # compiled blocks and panel (generated)
 │   │   ├── tools/dev-mu-plugins/     # local-only demo seed
 │   │   ├── tests/                    # PHPUnit
 │   │   └── uninstall.php             # cleanup on delete
 │   └── frontend/          # Next.js app (App Router, TS)
-│       ├── app/           # routes (list, detail, revalidate webhook)
-│       ├── components/    # ProjectCard, StackList
-│       ├── lib/           # env, config, data-access, GraphQL client
+│       ├── app/           # pages, api/revalidate, api/draft, sitemap, robots
+│       ├── components/    # ProjectCard, StackList, PreviewBanner
+│       ├── lib/           # env, data access, GraphQL client, preview, rate limiting
+│       ├── instrumentation.ts    # Sentry (opt-in)
 │       └── tests/         # Vitest + Playwright
 ├── docs/                  # architecture and decisions (ADRs)
 ├── .wp-env.json           # local WordPress environment
@@ -221,8 +231,12 @@ GitHub Actions runs four jobs in [.github/workflows/ci.yml](.github/workflows/ci
 
 ## Security posture
 
-- **Authorization is server-side.** Writes check the `edit_post` capability for the specific project; the frontend is never trusted.
+- **Authorization is server-side.** Writes and the draft-preview read check the `edit_post` capability for the specific project; the frontend is never trusted.
 - **Dedicated capabilities.** The CPT uses `capability_type` and `map_meta_cap`, and only administrator and editor roles receive the project capabilities.
+- **Signed preview links.** Preview URLs carry an HMAC-SHA256 token over the post id, slug and a short expiry; the frontend verifies it in constant time, and the draft id in the cookie is signed and bound to the slug it authorized.
+- **Rate-limited webhooks.** `/api/revalidate` and `/api/draft` are rate limited per client IP and return `429` with `Retry-After`; secrets are compared in constant time.
+- **Secrets stay server-side.** Preview and revalidation secrets and the Application Password are non-public env vars; only URLs are exposed to the client.
+- **Baseline security headers.** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and `Permissions-Policy` on every response.
 - **Restrictive CORS.** `Access-Control-Allow-Origin` is sent only for an allowlisted origin, and credentials are off by default.
 - **No raw SQL.** All access goes through WordPress query APIs, enforced by PHPCS database sniffs.
 - **Debug output is disabled** outside local and development environments.
@@ -244,6 +258,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 - [0006 Dedicated project capabilities](docs/decisions/0006-dedicated-project-capabilities.md)
 - [0007 Restrictive CORS](docs/decisions/0007-restrictive-cors.md)
 - [0008 Project editing surfaces (React panel default, ACF optional)](docs/decisions/0008-editing-surfaces.md)
+- [0009 Draft preview via signed links and an authenticated read](docs/decisions/0009-draft-preview.md)
+- [0010 Redirect the WordPress front-end to the React app](docs/decisions/0010-headless-frontend-redirect.md)
 
 ## License
 
